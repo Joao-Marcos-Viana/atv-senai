@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Tanque de Tilápias</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #CD853F 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .header-content {
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 15px;
+            height: 15px;
+            background: #32CD32;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .alert {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e88);
+            color: white;
+            padding: 15px 30px;
+            margin: 20px 30px;
+            border-radius: 10px;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .dashboard {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .parameter-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #A0522D;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .parameter-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .parameter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .parameter-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .parameter-unit {
+            font-size: 0.9rem;
+            color: #666;
+            background: #F5DEB3;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .parameter-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: color 0.3s ease;
+        }
+
+        .parameter-status {
+            font-size: 0.9rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status-normal { background: #d4edda; color: #155724; }
+        .status-warning { background: #fff3cd; color: #856404; }
+        .status-danger { background: #f8d7da; color: #721c24; }
+
+        .value-normal { color: #28a745; }
+        .value-warning { color: #ffc107; }
+        .value-danger { color: #dc3545; }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 69, 19, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #CD853F 0%, #DAA520 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(205, 133, 63, 0.4);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(205, 133, 63, 0.6);
+        }
+
+        .last-check {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            color: #666;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <div class="header-content">
+                <h1>🐟 Monitor de Tanque de Tilápias</h1>
+                <p>Sistema de Monitoramento para Aquicultura</p>
+            </div>
+        </div>
+
+        <div class="alert" id="alkalinityAlert">
+            <strong>⚠️ ATENÇÃO:</strong> É hora de verificar a alcalinidade da água! Para tilápias, mantenha entre 50-150 mg/L CaCO3. Última verificação há mais de 15 dias.
+        </div>
+
+        <div class="dashboard" id="dashboard">
+            <!-- Cards dos parâmetros serão gerados aqui -->
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="updateReadings()">🔄 Atualizar Leituras</button>
+            <button class="btn btn-secondary" onclick="checkAlkalinity()">🧪 Verificar Alcalinidade</button>
+            <button class="btn btn-secondary" id="autoUpdateBtn" onclick="toggleAutoUpdate()">⏰ Auto-Atualização</button>
+        </div>
+
+        <div class="last-check">
+            <p>Última atualização: <span id="lastUpdate">--</span></p>
+            <p>Próxima verificação de alcalinidade: <span id="nextAlkalinityCheck">--</span></p>
+        </div>
+    </div>
+
+    <script>
+        let autoUpdateInterval;
+        let autoUpdateEnabled = false;
+        let lastAlkalinityCheck = new Date() - (16 * 24 * 60 * 60 * 1000); // 16 dias atrás para mostrar alerta
+
+        const parameters = [
+            {
+                name: 'pH',
+                unit: 'pH',
+                min: 5.0,
+                max: 10.0,
+                ideal: [6.5, 8.5],
+                optimal: [7.0, 8.0],
+                precision: 2,
+                info: 'Tilápias: 6.5-8.5 (ideal: 7.0-8.0)'
+            },
+            {
+                name: 'Oxigênio Dissolvido',
+                unit: 'mg/L',
+                min: 0,
+                max: 15.0,
+                ideal: [4.0, 12.0],
+                optimal: [5.0, 8.0],
+                precision: 2,
+                info: 'Tilápias: >4mg/L (ideal: 5-8mg/L)'
+            },
+            {
+                name: 'Temperatura',
+                unit: '°C',
+                min: 10,
+                max: 40,
+                ideal: [22, 32],
+                optimal: [26, 30],
+                precision: 1,
+                info: 'Tilápias: 22-32°C (ideal: 26-30°C)'
+            },
+            {
+                name: 'ORP',
+                unit: 'mV',
+                min: -200,
+                max: 800,
+                ideal: [150, 400],
+                optimal: [200, 350],
+                precision: 0,
+                info: 'Ambiente oxidante saudável'
+            },
+            {
+                name: 'Condutividade',
+                unit: 'µS/cm',
+                min: 50,
+                max: 3000,
+                ideal: [100, 2000],
+                optimal: [300, 1500],
+                precision: 0,
+                info: 'Tilápias: 100-2000µS/cm (ideal: 300-1500µS/cm)'
+            }
+        ];
+
+        function generateReading(param) {
+            // Simula leituras mais realistas com tendência forte para valores ótimos para tilápias
+            let baseValue;
+            
+            // 80% de chance de estar na faixa ótima ou adequada
+            if (Math.random() < 0.8) {
+                if (Math.random() < 0.6) {
+                    // 60% chance de estar na faixa ótima
+                    const optimalRange = param.optimal[1] - param.optimal[0];
+                    baseValue = param.optimal[0] + Math.random() * optimalRange;
+                } else {
+                    // 20% chance de estar na faixa adequada (mas fora da ótima)
+                    const idealRange = param.ideal[1] - param.ideal[0];
+                    baseValue = param.ideal[0] + Math.random() * idealRange;
+                }
+            } else {
+                // 20% chance de valores fora da faixa ideal
+                const range = param.max - param.min;
+                baseValue = param.min + Math.random() * range;
+            }
+            
+            return baseValue;
+        }
+
+        function getParameterStatus(value, param) {
+            if (value >= param.optimal[0] && value <= param.optimal[1]) {
+                return { status: 'normal', text: 'Ótimo' };
+            } else if (value >= param.ideal[0] && value <= param.ideal[1]) {
+                return { status: 'warning', text: 'Adequado' };
+            } else if (value >= param.min && value <= param.max) {
+                return { status: 'warning', text: 'Aceitável' };
+            } else {
+                return { status: 'danger', text: 'Crítico - Risco para Tilápias' };
+            }
+        }
+
+        function createParameterCard(param, value) {
+            const status = getParameterStatus(value, param);
+            
+            return `
+                <div class="parameter-card">
+                    <div class="parameter-header">
+                        <span class="parameter-name">${param.name}</span>
+                        <span class="parameter-unit">${param.unit}</span>
+                    </div>
+                    <div class="parameter-value value-${status.status}">
+                        ${value.toFixed(param.precision)}
+                    </div>
+                    <div class="parameter-status status-${status.status}">
+                        ${status.text}
+                    </div>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 8px; text-align: center;">
+                        ${param.info}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateReadings() {
+            const dashboard = document.getElementById('dashboard');
+            let cardsHTML = '';
+            
+            parameters.forEach(param => {
+                const value = generateReading(param);
+                cardsHTML += createParameterCard(param, value);
+            });
+            
+            dashboard.innerHTML = cardsHTML;
+            
+            // Atualiza timestamp
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleString('pt-BR');
+            
+            // Verifica condições críticas específicas para tilápias
+            setTimeout(() => checkTilapiaHealth(), 100);
+            
+            // Verifica se precisa mostrar alerta de alcalinidade
+            checkAlkalinityAlert();
+        }
+
+        function checkTilapiaHealth() {
+            const cards = document.querySelectorAll('.parameter-card');
+            let criticalAlerts = [];
+            
+            cards.forEach((card, index) => {
+                const param = parameters[index];
+                const valueElement = card.querySelector('.parameter-value');
+                const currentValue = parseFloat(valueElement.textContent);
+                
+                // Alertas específicos para tilápias
+                if (param.name === 'Oxigênio Dissolvido' && currentValue < 3.0) {
+                    criticalAlerts.push('🚨 EMERGÊNCIA: Oxigênio muito baixo! Tilápias podem morrer por asfixia.');
+                } else if (param.name === 'Temperatura' && (currentValue < 18 || currentValue > 35)) {
+                    criticalAlerts.push('🚨 TEMPERATURA CRÍTICA: Tilápias em estresse térmico severo!');
+                } else if (param.name === 'pH' && (currentValue < 5.5 || currentValue > 9.5)) {
+                    criticalAlerts.push('🚨 pH LETAL: Risco de morte das tilápias!');
+                }
+            });
+            
+            // Mostra alertas críticos se existirem
+            if (criticalAlerts.length > 0) {
+                criticalAlerts.forEach((alert, index) => {
+                    setTimeout(() => showNotification(alert, 'danger'), index * 1000);
+                });
+            }
+        }
+
+        function checkAlkalinityAlert() {
+            const now = new Date();
+            const daysSinceLastCheck = (now - lastAlkalinityCheck) / (1000 * 60 * 60 * 24);
+            const alert = document.getElementById('alkalinityAlert');
+            
+            if (daysSinceLastCheck >= 15) {
+                alert.style.display = 'block';
+            } else {
+                alert.style.display = 'none';
+            }
+            
+            // Atualiza próxima verificação
+            const nextCheck = new Date(lastAlkalinityCheck);
+            nextCheck.setDate(nextCheck.getDate() + 15);
+            document.getElementById('nextAlkalinityCheck').textContent = nextCheck.toLocaleDateString('pt-BR');
+        }
+
+        function checkAlkalinity() {
+            lastAlkalinityCheck = new Date();
+            const alert = document.getElementById('alkalinityAlert');
+            alert.style.display = 'none';
+            
+            // Atualiza próxima verificação
+            const nextCheck = new Date(lastAlkalinityCheck);
+            nextCheck.setDate(nextCheck.getDate() + 15);
+            document.getElementById('nextAlkalinityCheck').textContent = nextCheck.toLocaleDateString('pt-BR');
+            
+            // Feedback visual melhorado
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✅ Verificado!';
+            btn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = 'linear-gradient(135deg, #CD853F 0%, #DAA520 100%)';
+            }, 2000);
+            
+            // Mostra notificação
+            showNotification('✅ Alcalinidade verificada! Próxima verificação agendada para ' + nextCheck.toLocaleDateString('pt-BR'), 'success');
+        }
+
+        function toggleAutoUpdate() {
+            const autoBtn = document.getElementById('autoUpdateBtn');
+            if (autoUpdateEnabled) {
+                clearInterval(autoUpdateInterval);
+                autoUpdateEnabled = false;
+                autoBtn.textContent = '⏰ Auto-Atualização';
+            } else {
+                autoUpdateInterval = setInterval(updateReadings, 30000); // Atualiza a cada 30 segundos
+                autoUpdateEnabled = true;
+                autoBtn.textContent = '⏸️ Pausar Auto-Atualização';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            // Remove notificação existente se houver
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Cria nova notificação
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = message;
+            
+            // Estilos da notificação baseados no tipo
+            let bgColor;
+            switch(type) {
+                case 'success':
+                    bgColor = 'linear-gradient(135deg, #28a745, #20c997)';
+                    break;
+                case 'danger':
+                    bgColor = 'linear-gradient(135deg, #dc3545, #e74c3c)';
+                    break;
+                default:
+                    bgColor = 'linear-gradient(135deg, #8B4513, #A0522D)';
+            }
+            
+            // Estilos da notificação
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideInRight 0.5s ease-out;
+                max-width: 350px;
+                font-weight: 500;
+                border-left: 5px solid rgba(255,255,255,0.3);
+            `;
+
+            // Adiciona animação CSS se não existir
+            if (!document.querySelector('#notificationStyle')) {
+                const style = document.createElement('style');
+                style.id = 'notificationStyle';
+                style.textContent = `
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOutRight {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(notification);
+
+            // Remove após tempo baseado no tipo
+            const duration = type === 'danger' ? 8000 : 4000; // Alertas críticos ficam mais tempo
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.5s ease-out';
+                setTimeout(() => notification.remove(), 500);
+            }, duration);
+        }
+
+        // Inicializa o sistema
+        updateReadings();
+        checkAlkalinityAlert();
+        
+        // Simula atualizações automáticas ocasionais
+        setInterval(() => {
+            if (!autoUpdateEnabled && Math.random() < 0.3) {
+                updateReadings();
+            }
+        }, 45000);
+    </script>
+</body>
+</html>

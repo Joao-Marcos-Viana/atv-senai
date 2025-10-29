@@ -1,0 +1,26 @@
+
+📅 Arquivo criado em: 13/08/2025 às 20:35:45
+==================================================
+
+Este arquivo foi gerado automaticamente pelo Python!
+
+Você pode editar este texto diretamente no código e rodar novamente.
+
+Informações do sistema:
+- Nome do arquivo: arquivo_2025-08-13_20-35-45.txt
+- Pasta atual: c:\Users\ramon\Desktop\João Estudos\Jogo SCRUM e GIT
+- Data/Hora: 2025-08-13 20:35:45.096207
+
+Para personalizar:
+1. Edite a variável 'conteudo_personalizado' no código
+2. Execute novamente com o botão Play ▶️
+
+    
+🎯 MEU TEXTO PERSONALIZADO:
+Escreva aqui o que quiser salvar no arquivo!
+
+Exemplo:
+- Lista de tarefas
+- Anotações
+- Código
+- Qualquer coisa!

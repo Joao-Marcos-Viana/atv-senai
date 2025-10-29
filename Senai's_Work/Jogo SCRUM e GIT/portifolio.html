@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Portfólio — Upload de Projetos</title>
+  <style>
+    /* Estilo simples e moderno, sem dependências */
+    :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#7c3aed;--glass:rgba(255,255,255,0.04)}
+    *{box-sizing:border-box}
+    body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,'Helvetica Neue',Arial;margin:0;background:linear-gradient(180deg,#071022 0%,var(--bg) 100%);color:#e6eef8;min-height:100vh}
+    .container{max-width:1100px;margin:40px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{margin:0;font-size:20px}
+    p.lead{color:var(--muted);margin:6px 0 0;font-size:13px}
+
+    .grid{display:grid;grid-template-columns:380px 1fr;gap:20px}
+    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text],textarea,select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);color:inherit}
+    textarea{min-height:100px;resize:vertical}
+    .field{margin-bottom:12px}
+    .btn{display:inline-block;padding:10px 12px;border-radius:8px;border:none;background:var(--accent);color:white;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .small{font-size:13px;padding:8px 10px}
+
+    .projects-list{display:flex;flex-direction:column;gap:12px}
+    .project-item{display:flex;flex-direction:column;padding:12px;border-radius:10px;background:linear-gradient(180deg,var(--glass),transparent);border:1px solid rgba(255,255,255,0.03)}
+    .project-top{display:flex;align-items:center;justify-content:space-between}
+    .project-meta{display:flex;gap:10px;align-items:center}
+    .tag{font-size:12px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.03);color:var(--muted)}
+    .muted{color:var(--muted)}
+
+    .controls{display:flex;gap:8px;align-items:center}
+    input[type=file]{padding:6px}
+    .search{width:280px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px}
+
+    /* Responsivo */
+    @media (max-width:900px){.grid{grid-template-columns:1fr}.container{margin:16px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Meu Portfólio — Upload de Projetos</h1>
+        <p class="lead">Adicione projetos com arquivos (ZIP, código, imagens). Os dados ficam salvos no seu navegador.</p>
+      </div>
+      <div class="controls">
+        <input id="search" class="search" placeholder="Pesquisar por título ou tag..." />
+        <button id="exportBtn" class="btn small">Exportar JSON</button>
+        <label class="btn small ghost" for="importFile">Importar</label>
+        <input id="importFile" type="file" accept="application/json" style="display:none" />
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card" aria-label="formulário de upload">
+        <h3>Novo projeto</h3>
+        <div class="field">
+          <label for="title">Título</label>
+          <input id="title" type="text" placeholder="Ex: Motor de busca simples" />
+        </div>
+        <div class="field">
+          <label for="desc">Descrição</label>
+          <textarea id="desc" placeholder="Breve descrição do projeto"></textarea>
+        </div>
+        <div class="field">
+          <label for="tags">Tags (separe por vírgula)</label>
+          <input id="tags" type="text" placeholder="ex: javascript,frontend,api" />
+        </div>
+        <div class="field">
+          <label for="files">Arquivos (pode enviar múltiplos)</label>
+          <input id="files" type="file" multiple />
+          <div class="muted" style="margin-top:6px;font-size:12px">Arquivos são armazenados localmente no seu navegador (IndexedDB). Use exportar para backup.</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="saveBtn" class="btn">Salvar projeto</button>
+          <button id="clearBtn" class="btn ghost">Limpar formulário</button>
+        </div>
+
+        <hr style="margin:14px 0;border:0;border-top:1px solid rgba(255,255,255,0.03)" />
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="clearAllBtn" class="btn ghost small">Apagar todos (local)</button>
+          <button id="helpBtn" class="btn ghost small">Como funciona</button>
+        </div>
+      </section>
+
+      <section>
+        <div class="card">
+          <h3>Projetos</h3>
+          <div id="list" class="projects-list" style="margin-top:12px;min-height:200px"></div>
+          <footer>Armazenamento local via IndexedDB — os arquivos ficam apenas no seu navegador. Faça export para backup.</footer>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <template id="project-template">
+    <div class="project-item">
+      <div class="project-top">
+        <div class="project-meta">
+          <strong class="title"></strong>
+          <span class="tag count"></span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn small download-btn">Download ZIP</button>
+          <button class="btn small ghost edit-btn">Editar</button>
+          <button class="btn small ghost delete-btn">Apagar</button>
+        </div>
+      </div>
+      <div style="margin-top:8px" class="desc muted"></div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap" class="tags"></div>
+      <div style="margin-top:8px;font-size:12px;color:var(--muted)" class="meta-small"></div>
+    </div>
+  </template>
+
+  <script>
+    // Portfolio uploader — versão single-file
+    // Armazena projetos em IndexedDB (nome: portfolio-db, store: projects)
+
+    const DB_NAME = 'portfolio-db';
+    const STORE_NAME = 'projects';
+    const DB_VERSION = 1;
+    let db;
+
+    function openDB(){
+      return new Promise((resolve, reject)=>{
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = e => {
+          const d = e.target.result;
+          if(!d.objectStoreNames.contains(STORE_NAME)){
+            const store = d.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            store.createIndex('title', 'title', { unique: false });
+            store.createIndex('tags', 'tags', { unique:false, multiEntry:true });
+          }
+        };
+        req.onsuccess = e => { db = e.target.result; resolve(db); };
+        req.onerror = e => reject(e.target.error);
+      });
+    }
+
+    function id(){ return crypto.randomUUID() }
+
+    function tx(storeName, mode='readonly'){ const t = db.transaction(storeName, mode); return t.objectStore(storeName); }
+
+    function saveProject(project){
+      return new Promise((resolve,reject)=>{
+        const store = tx(STORE_NAME,'readwrite');
+        const r = store.put(project);
+        r.onsuccess = ()=>resolve(project);
+        r.onerror = e=>reject(e.target.error);
+      });
+    }
+
+    function getAllProjects(){
+      return new Promise((resolve,reject)=>{
+        const store = tx(STORE_NAME,'readonly');
+        const req = store.getAll();
+        req.onsuccess = ()=>resolve(req.result.sort((a,b)=>b.createdAt-a.createdAt));
+        req.onerror = e=>reject(e.target.error);
+      });
+    }
+
+    function deleteProject(id){
+      return new Promise((resolve,reject)=>{
+        const store = tx(STORE_NAME,'readwrite');
+        const req = store.delete(id);
+        req.onsuccess = ()=>resolve();
+        req.onerror = e=>reject(e.target.error);
+      });
+    }
+
+    function clearAll(){
+      return new Promise((resolve,reject)=>{
+        const store = tx(STORE_NAME,'readwrite');
+        const req = store.clear();
+        req.onsuccess = ()=>resolve();
+        req.onerror = e=>reject(e.target.error);
+      });
+    }
+
+    // Save files as blobs inside the project object. To avoid huge localStorage, we keep them in IndexedDB as part of the object store.
+    // Read files from input and produce an array of {name,type,size,blob}
+    async function readFiles(fileList){
+      const arr = Array.from(fileList||[]);
+      const out = [];
+      for(const f of arr){
+        // we store the blob directly (IndexedDB supports blobs)
+        out.push({name:f.name,type:f.type,size:f.size,blob:f});
+      }
+      return out;
+    }
+
+    // Utility: create a ZIP-like blob (simple multipart) — since we don't have a zip library, we provide a convenience: if single file and it's a zip, just return it; else we create a JSON file containing base64s.
+    async function makeDownloadBlob(files){
+      if(!files || files.length===0) return new Blob([""], {type:'application/octet-stream'});
+      if(files.length===1 && files[0].name.endsWith('.zip')) return files[0].blob;
+      // create an index.json with metadata and include files as blobs in a folder-like Blob (not a real zip)
+      // We'll produce a .tar-like simple package: a JSON manifest and concatenated blobs — easier to extract by developer.
+      const manifest = files.map((f,i)=>({i,name:f.name,type:f.type,size:f.size}));
+      const parts = [];
+      parts.push(new Blob([JSON.stringify({manifest},null,2)],{type:'application/json'}));
+      for(const f of files){ parts.push(new Blob(['\n--FILE-START--\n'])); parts.push(f.blob); parts.push(new Blob(['\n--FILE-END--\n'])); }
+      return new Blob(parts,{type:'application/octet-stream'});
+    }
+
+    // UI wiring
+    const $title = document.getElementById('title');
+    const $desc = document.getElementById('desc');
+    const $tags = document.getElementById('tags');
+    const $files = document.getElementById('files');
+    const $saveBtn = document.getElementById('saveBtn');
+    const $list = document.getElementById('list');
+    const $clearBtn = document.getElementById('clearBtn');
+    const $clearAllBtn = document.getElementById('clearAllBtn');
+    const $helpBtn = document.getElementById('helpBtn');
+    const $search = document.getElementById('search');
+    const $exportBtn = document.getElementById('exportBtn');
+    const $importFile = document.getElementById('importFile');
+
+    function formatBytes(n){ if(n<1024) return n+' B'; if(n<1024*1024) return (n/1024).toFixed(1)+' KB'; return (n/1024/1024).toFixed(2)+' MB'; }
+
+    async function refreshList(filter=''){
+      const projects = await getAllProjects();
+      const q = filter.trim().toLowerCase();
+      $list.innerHTML = '';
+      const tpl = document.getElementById('project-template');
+      for(const p of projects){
+        if(q){
+          const hay = (p.title+' '+p.tags.join(' ')+' '+p.description).toLowerCase();
+          if(!hay.includes(q)) continue;
+        }
+        const el = tpl.content.cloneNode(true);
+        const root = el.querySelector('.project-item');
+        el.querySelector('.title').textContent = p.title;
+        el.querySelector('.count').textContent = p.files.length? p.files.length+' arq':'';
+        el.querySelector('.desc').textContent = p.description;
+        el.querySelector('.meta-small').textContent = `Criado em ${new Date(p.createdAt).toLocaleString()} • Tamanho: ${formatBytes(p.totalSize||0)}`;
+        const tagsWrap = el.querySelector('.tags');
+        for(const t of p.tags){ const s = document.createElement('span'); s.className='tag'; s.textContent=t; tagsWrap.appendChild(s); }
+
+        const downloadBtn = el.querySelector('.download-btn');
+        downloadBtn.onclick = async ()=>{
+          const files = p.files.map(f=>({name:f.name,type:f.type,size:f.size,blob:f.blob}));
+          const blob = await makeDownloadBlob(files);
+          const a = document.createElement('a');
+          const filename = p.title.replace(/[^a-z0-9-_.]/gi,'_') + '_pkg.bin';
+          a.href = URL.createObjectURL(blob);
+          a.download = filename;
+          a.click();
+          setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+        };
+
+        el.querySelector('.delete-btn').onclick = async ()=>{
+          if(!confirm('Apagar projeto "'+p.title+'"?')) return;
+          await deleteProject(p.id);
+          await refreshList($search.value);
+        };
+
+        el.querySelector('.edit-btn').onclick = ()=>{
+          // carregar dados no formulário para edição
+          $title.value = p.title;
+          $desc.value = p.description;
+          $tags.value = p.tags.join(',');
+          // note: não reimportamos os blobs para input de arquivos (não é possível). Ao salvar com arquivos novos, os antigos serão mantidos.
+          $saveBtn.textContent = 'Salvar alterações';
+          $saveBtn.dataset.editId = p.id;
+          window.scrollTo({top:0,behavior:'smooth'});
+        };
+
+        $list.appendChild(el);
+      }
+      if($list.children.length===0){ $list.innerHTML = '<div class="muted">Nenhum projeto salvo.</div>'; }
+    }
+
+    $saveBtn.addEventListener('click', async ()=>{
+      const title = $title.value.trim();
+      if(!title){ alert('Preencha o título'); $title.focus(); return; }
+      const description = $desc.value.trim();
+      const tags = $tags.value.split(',').map(s=>s.trim()).filter(Boolean);
+      const fileObjs = await readFiles($files.files);
+      const now = Date.now();
+      const editId = $saveBtn.dataset.editId;
+
+      if(editId){
+        // atualizar: pegar objeto existente, mesclar arquivos novos
+        const store = tx(STORE_NAME,'readonly');
+        const req = store.get(editId);
+        req.onsuccess = async ()=>{
+          const existing = req.result;
+          if(!existing){ alert('Projeto não encontrado.'); return; }
+          // adicionar arquivos novos ao array
+          existing.title = title; existing.description = description; existing.tags = tags; existing.updatedAt = now;
+          if(fileObjs.length) existing.files = existing.files.concat(fileObjs);
+          existing.totalSize = (existing.files||[]).reduce((s,f)=>s+ (f.size||0),0);
+          await saveProject(existing);
+          delete $saveBtn.dataset.editId; $saveBtn.textContent='Salvar projeto';
+          clearForm();
+          await refreshList($search.value);
+        };
+        req.onerror = ()=>alert('Erro ao buscar projeto para editar.');
+      } else {
+        const project = {
+          id: id(),
+          title,
+          description,
+          tags,
+          files: fileObjs,
+          createdAt: now,
+          updatedAt: now,
+          totalSize: fileObjs.reduce((s,f)=>s+(f.size||0),0)
+        };
+        await saveProject(project);
+        clearForm();
+        await refreshList($search.value);
+      }
+    });
+
+    function clearForm(){ $title.value=''; $desc.value=''; $tags.value=''; $files.value=''; }
+    $clearBtn.addEventListener('click', clearForm);
+
+    $clearAllBtn.addEventListener('click', async ()=>{
+      if(!confirm('Apagar todos os projetos armazenados localmente? Esta ação não pode ser desfeita.')) return;
+      await clearAll();
+      await refreshList();
+    });
+
+    $helpBtn.addEventListener('click', ()=>{
+      alert('Como funciona:\n\n • Os projetos e arquivos são salvos apenas no seu navegador (IndexedDB).\n • Para backup, use Exportar JSON.\n • Para restaurar, importe o JSON.\n • Ao editar, arquivos novos são acrescentados; os antigos são mantidos.');
+    });
+
+    $search.addEventListener('input', ()=>refreshList($search.value));
+
+    // Export: gerar um JSON contendo metadados e arquivos como base64 (pode ficar grande)
+    $exportBtn.addEventListener('click', async ()=>{
+      const projects = await getAllProjects();
+      // transformar blobs em base64c (async)
+      const out = [];
+      for(const p of projects){
+        const copy = {...p};
+        copy.files = [];
+        for(const f of p.files||[]){
+          const base = await blobToBase64(f.blob);
+          copy.files.push({name:f.name,type:f.type,size:f.size,base64:base});
+        }
+        out.push(copy);
+      }
+      const blob = new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'portfolio-export-'+(new Date().toISOString().slice(0,10))+'.json';
+      a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+    });
+
+    $importFile.addEventListener('change', async (e)=>{
+      const f = e.target.files[0]; if(!f) return;
+      try{
+        const text = await f.text();
+        const arr = JSON.parse(text);
+        if(!Array.isArray(arr)) throw new Error('Formato inválido');
+        for(const p of arr){
+          // reconstruir blobs
+          const files = [];
+          for(const ff of p.files||[]){
+            const blob = base64ToBlob(ff.base64, ff.type || 'application/octet-stream');
+            files.push({name:ff.name,type:ff.type,size:ff.size,blob});
+          }
+          const project = {
+            id: p.id || id(),
+            title: p.title || 'Sem título',
+            description: p.description || '',
+            tags: p.tags || [],
+            files,
+            createdAt: p.createdAt || Date.now(),
+            updatedAt: Date.now(),
+            totalSize: files.reduce((s,f)=>s+(f.size||0),0)
+          };
+          await saveProject(project);
+        }
+        alert('Importação concluída.');
+        await refreshList();
+      }catch(err){ alert('Erro na importação: '+err.message); }
+      e.target.value = '';
+    });
+
+    function blobToBase64(blob){
+      return new Promise((resolve,reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          const dataUrl = reader.result; // data:...;base64,XXXX
+          const idx = dataUrl.indexOf(',');
+          resolve(dataUrl.slice(idx+1));
+        };
+        reader.onerror = ()=>reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function base64ToBlob(base64, type){
+      const bytes = atob(base64);
+      let len = bytes.length;
+      const out = new Uint8Array(len);
+      for(let i=0;i<len;i++) out[i]=bytes.charCodeAt(i);
+      return new Blob([out],{type});
+    }
+
+    // Inicialização
+    (async ()=>{
+      await openDB();
+      await refreshList();
+    })();
+  </script>
+
+</body>
+</html>

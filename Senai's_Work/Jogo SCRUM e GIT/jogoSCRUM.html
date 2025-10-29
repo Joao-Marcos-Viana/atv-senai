@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz SCRUM & GIT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a1a1a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .container {
+            background: rgb(255, 255, 255);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2c5aa0, #1a1a1a, #2c5aa0);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        h1 {
+            color: #2c5aa0;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .intro-screen {
+            text-align: center;
+        }
+
+        .intro-screen h2 {
+            color: #1a1a1a;
+            margin: 20px 0;
+            font-size: 1.8em;
+        }
+
+        .intro-screen p {
+            font-size: 1.2em;
+            margin: 15px 0;
+            color: #666;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a1a1a 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 5px 15px rgba(44, 90, 160, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(44, 90, 160, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+
+        .input-group input {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #2c5aa0;
+            box-shadow: 0 0 10px rgba(44, 90, 160, 0.2);
+        }
+
+        .scoreboard {
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a1a1a 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #2c5aa0;
+        }
+
+        .question-text {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .alternatives {
+            display: grid;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .alternative {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+        }
+
+        .alternative .letter {
+            background: #2c5aa0;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .alternative:hover {
+            border-color: #2c5aa0;
+            background: #f8f9ff;
+            transform: translateY(-1px);
+        }
+
+        .alternative.selected {
+            border-color: #2c5aa0;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a1a1a 100%);
+            color: white;
+        }
+
+        .alternative.selected .letter {
+            background: white;
+            color: #2c5aa0;
+        }
+
+        .result {
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .result.correct {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+
+        .result.incorrect {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            color: white;
+        }
+
+        .final-screen {
+            text-align: center;
+        }
+
+        .trophy {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 6px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #2c5aa0, #1a1a1a);
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+
+        .round-indicator {
+            font-size: 1.1em;
+            color: #2c5aa0;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .btn {
+                padding: 12px 24px;
+                font-size: 1em;
+            }
+        }
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .prize-options {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .prize-box {
+            background: #2c5aa0;
+            color: white;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .prize-box:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tela de Introdução -->
+        <div id="intro" class="screen active intro-screen">
+            <h1>🏆 Quiz SCRUM & GIT</h1>
+            <h2>Vamos conferir se vocês aprenderam!</h2>
+            <button class="btn" onclick="showModeSelection()">Começar Jogo</button>
+        </div>
+
+        <!-- Nova tela de seleção de modo -->
+        <div id="modeSelection" class="screen">
+            <h1>🎮 Modo de Jogo</h1>
+            <h2>Escolha como deseja jogar:</h2>
+            <button class="btn" onclick="selectMode('players')" style="margin: 20px;">👥 2 Jogadores</button>
+            <button class="btn" onclick="selectMode('teams')" style="margin: 20px;">🏆 2 Equipes</button>
+        </div>
+
+        <!-- Tela de Configuração dos Jogadores/Equipes -->
+        <div id="playerSetup" class="screen">
+            <h1>👤 Configuração</h1>
+            <div class="input-group">
+                <label for="player1">Nome do Jogador 1:</label>
+                <input type="text" id="player1" placeholder="Digite o nickname" maxlength="20">
+            </div>
+            <div class="input-group">
+                <label for="player2">Nome do Jogador 2:</label>
+                <input type="text" id="player2" placeholder="Digite o nickname" maxlength="20">
+            </div>
+            <button class="btn" onclick="startGame()">Iniciar Jogo</button>
+            <button class="btn" onclick="showModeSelection()" style="background: #666;">Voltar</button>
+        </div>
+
+        <!-- Tela do Jogo -->
+        <div id="game" class="screen">
+            <div class="round-indicator" id="roundIndicator">RODADA 1/5</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 20%"></div>
+            </div>
+            <div class="scoreboard" id="scoreboard">
+                Jogador1: 0 | Jogador2: 0
+            </div>
+            <div class="question-card">
+                <div class="question-text" id="questionText"></div>
+                <div class="alternatives" id="alternatives"></div>
+            </div>
+            <button class="btn" id="submitAnswer" onclick="submitAnswer()" style="display: none;">Confirmar Resposta</button>
+            <div id="result" class="result" style="display: none;"></div>
+            <button class="btn" id="nextButton" onclick="nextQuestion()" style="display: none;">Próxima Pergunta</button>
+        </div>
+
+        <!-- Tela Final -->
+        <div id="final" class="screen final-screen">
+            <h1>🎯 Resultado Final</h1>
+            <div class="trophy" id="trophy"></div>
+            <div class="scoreboard" id="finalScore"></div>
+            <div id="winner"></div>
+            <button class="btn" onclick="resetGame()">Jogar Novamente</button>
+        </div>
+        <!-- Popup de Prêmios -->
+        <div id="prizePopup" class="popup">
+            <div class="popup-content">
+                <h2>🎁 Escolha seu Prêmio!</h2>
+                <div class="prize-options">
+                    <div class="prize-box" onclick="revealPrize(1)">❓</div>
+                    <div class="prize-box" onclick="revealPrize(2)">❓</div>
+                    <div class="prize-box" onclick="revealPrize(3)">❓</div>
+                </div>
+                <button class="btn" onclick="closePrizePopup()">Fechar</button>
+            </div>
+        </div>
+
+        <!-- Popup de Revelação do Prêmio -->
+        <div id="revealPopup" class="popup">
+            <div class="popup-content">
+                <h2>🎉 Seu Prêmio!</h2>
+                <div id="prizeResult" style="font-size: 1.5em; margin: 20px 0;"></div>
+                <button class="btn" onclick="closeRevealPopup()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais do jogo
+        let gameMode = ""; 
+        let totalRounds = 5; 
+        let player1Name = "";
+        let player2Name = "";
+        let currentPlayer = 1;
+        let player1Score = 0;
+        let player2Score = 0;
+        let currentRound = 1;
+        let selectedAnswer = "";
+        let currentQuestion = {};
+        let questionsUsed = [];
+        let bothPlayersTried = false;
+
+        // Lista de perguntas
+        const questions = [
+            {
+                "pergunta": "Qual é o principal objetivo do Scrum?",
+                "alternativas": [
+                    "A) Controlar os custos de produção de software",
+                    "B) Criar planos detalhados de projetos antes do início", 
+                    "C) Ajudar times a gerar valor adaptativo para problemas complexos",
+                    "D) Substituir completamente outras metodologias ágeis"
+                ],
+                "correta": "C"
+            },
+            {
+                "pergunta": "Quais são os três pilares fundamentais do Scrum?",
+                "alternativas": [
+                    "A) Planejamento, Execução e Entrega",
+                    "B) Comunicação, Colaboração e Resultado",
+                    "C) Transparência, Inspeção e Adaptação",
+                    "D) Motivação, Liderança e Controle"
+                ],
+                "correta": "C"
+            },
+            {
+                "pergunta": "Sobre os papéis no Scrum Team, é correto afirmar que:",
+                "alternativas": [
+                    "A) O Product Owner executa as tarefas técnicas do Sprint",
+                    "B) O Scrum Master lidera o time de forma hierárquica",
+                    "C) Os Developers são os únicos responsáveis por remover impedimentos",
+                    "D) O Scrum Team é auto-gerenciável e multifuncional"
+                ],
+                "correta": "D"
+            },
+            {
+                "pergunta": "Qual mudança foi introduzida no Guia Scrum 2020?",
+                "alternativas": [
+                    "A) Remoção do conceito de Sprint Backlog",
+                    "B) Inclusão da Meta do Produto como compromisso do Product Backlog",
+                    "C) Adoção obrigatória de ferramentas específicas para gestão de tarefas",
+                    "D) Substituição do Scrum Master por um Agile Coach"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "Qual valor NÃO está entre os cinco valores do Scrum?",
+                "alternativas": [
+                    "A) Comprometimento",
+                    "B) Coragem",
+                    "C) Persistência",
+                    "D) Respeito"
+                ],
+                "correta": "C"
+            },
+            {
+                "pergunta": "O que é o Backlog do Produto?",
+                "alternativas": [
+                    "A) Uma lista de tarefas pessoais do Product Owner",
+                    "B) Uma lista com os bugs encontrados pelo time de testes",
+                    "C) Uma lista com tudo o que é necessário para desenvolver o produto",
+                    "D) Um relatório final do projeto"
+                ],
+                "correta": "C"
+            },
+            {
+                "pergunta": "Quem é responsável por manter e priorizar o Backlog do Produto?",
+                "alternativas": [
+                    "A) O time de desenvolvedores",
+                    "B) O Scrum Master",
+                    "C) O Product Owner",
+                    "D) O cliente"
+                ],
+                "correta": "C"
+            },
+            {
+                "pergunta": "O que é o Backlog da Sprint?",
+                "alternativas": [
+                    "A) A lista de atividades da empresa no mês",
+                    "B) Os itens escolhidos do Backlog do Produto para a Sprint atual",
+                    "C) O relatório de erros do sistema",
+                    "D) Um documento com metas anuais da equipe"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "O que deve ser feito com o Backlog da Sprint durante a Sprint?",
+                "alternativas": [
+                    "A) Ignorar as mudanças no projeto",
+                    "B) Deixar como está até o fim",
+                    "C) Jogar fora se mudar a prioridade",
+                    "D) Atualizar todos os dias para refletir o progresso"
+                ],
+                "correta": "D"
+            },
+            {
+                "pergunta": "O que é o Incremento em uma Sprint?",
+                "alternativas": [
+                    "A) Uma reunião de planejamento",
+                    "B) O que foi desenvolvido na Sprint e está pronto para ser usado",
+                    "C) O documento com as ideias novas do time",
+                    "D) A lista de tarefas pendentes da Sprint anterior"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "Quais são os eventos Scrum?",
+                "alternativas": [
+                    "A) Sprint Retrospective, Sprint Review, Daily Scrum, Sprint Planning",
+                    "B) Sprint race, Sprint running, Sprint Planning, Sprint Retrospective",
+                    "C) Sprint place, Daily Sprint, Scrum Daily, Sprint Planning",
+                    "D) Sprint Retrospective, Sprint Review, Daily Scrum, Sprint running"
+                ],
+                "correta": "A"
+            },
+            {
+                "pergunta": "O que é Sprint?",
+                "alternativas": [
+                    "A) O tempo de espaço para o intervalo das reuniões",
+                    "B) Sprint é um intervalo de tempo onde a equipe Scrum trabalha para entregar um conjunto definido de funcionalidades ou melhorias do produto",
+                    "C) Sprint é a data de entrega do projeto juntamente com a equipe de devs",
+                    "D) Sprint é uma comunhão de ideias"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "Qual dessas definições está correta sobre Daily Scrum?",
+                "alternativas": [
+                    "A) Reunião rápida diária, feita durante todo o Sprint, objetivo é sincronizar o time e ajustar o trabalho e identificar bloqueios",
+                    "B) Reunião somente com os desenvolvedores com o intuito de sincronizar",
+                    "C) Reuniões de trabalho",
+                    "D) Somente usada em dias alternados para não sobrecarregar a equipe"
+                ],
+                "correta": "A"
+            },
+            {
+                "pergunta": "Qual é a duração máxima recomendada para a Daily Scrum?",
+                "alternativas": [
+                    "A) 30 minutos",
+                    "B) 15 minutos",
+                    "C) 45 minutos",
+                    "D) 1 hora"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "O que é um commit no Git?",
+                "alternativas": [
+                    "A) Um comando para enviar código para o servidor",
+                    "B) Um snapshot (registro) das alterações no repositório local",
+                    "C) Uma mensagem de erro comum",
+                    "D) Um comando de repetição"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "Qual é a principal função do Pull Request no GitHub?",
+                "alternativas": [
+                    "A) Excluir um repositório",
+                    "B) Solicitar a revisão e integração de código em outra branch",
+                    "C) Criar um novo arquivo README",
+                    "D) Salvar o arquivo completo"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "Qual recurso o GitLab oferece que o GitHub só tem em planos pagos?",
+                "alternativas": [
+                    "A) Issues (rastreamento de tarefas)",
+                    "B) CI/CD integrado (GitLab Pipelines) gratuito",
+                    "C) Hospedagem de repositórios privados",
+                    "D) Todas acima"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "Qual empresa é dona do Bitbucket?",
+                "alternativas": [
+                    "A) Microsoft",
+                    "B) Atlassian",
+                    "C) Google",
+                    "D) Apple"
+                ],
+                "correta": "B"
+            },
+            {
+                "pergunta": "Qual plataforma é mais usada para projetos open-source?",
+                "alternativas": [
+                    "A) Bitbucket",
+                    "B) GitLab",
+                    "C) GitHub",
+                    "D) Git"
+                ],
+                "correta": "C"
+            },
+            {
+                "pergunta": "Qual dessas alternativas define corretamente o papel do Scrum Master?",
+                "alternativas": [
+                    "A) Responsável por priorizar as tarefas do Product Backlog e representar os interesses do cliente",
+                    "B) Responsável por desenvolver o produto e implementar as funcionalidades definidas no Sprint",
+                    "C) Responsável por garantir que o time siga os princípios e práticas do Scrum, removendo impedimentos e facilitando as cerimônias",
+                    "D) Responsável por aprovar a entrega final do projeto e definir o prazo de cada Sprint"
+                ],
+                "correta": "C"
+            }
+        ];
+
+        // Cópia das perguntas para poder resetar
+        let availableQuestions = [...questions];
+
+        function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.remove('active');
+        });
+        document.getElementById(screenId).classList.add('active');
+        }
+
+        function showPlayerSetup() {
+            showScreen('playerSetup');
+        }
+
+        function startGame() {
+            player1Name = document.getElementById('player1').value.trim();
+            player2Name = document.getElementById('player2').value.trim();
+
+            if (!player1Name || !player2Name) {
+                alert('Por favor, preencha o nome dos dois jogadores!');
+                return;
+            }
+
+            // Sorteia quem começa
+            currentPlayer = Math.random() < 0.5 ? 1 : 2;
+            
+            showScreen('game');
+            updateScoreboard();
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (availableQuestions.length === 0 || currentRound > totalRounds) {
+                endGame();
+                return;
+            }
+
+            // Sorteia uma pergunta
+            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            currentQuestion = availableQuestions[randomIndex];
+            
+            // Remove a pergunta da lista
+            availableQuestions.splice(randomIndex, 1);
+
+            // Atualiza a interface
+            document.getElementById('roundIndicator').textContent = `RODADA ${currentRound}/${totalRounds} - Vez de ${currentPlayer === 1 ? player1Name : player2Name}`;
+            document.getElementById('progressFill').style.width = `${(currentRound / totalRounds) * 100}%`;
+            document.getElementById('questionText').textContent = currentQuestion.pergunta;
+            
+            const alternativesDiv = document.getElementById('alternatives');
+            alternativesDiv.innerHTML = '';
+            
+            currentQuestion.alternativas.forEach((alt, index) => {
+                const div = document.createElement('div');
+                div.className = 'alternative';
+                
+                const letter = alt.charAt(0); // A, B, C, D
+                const text = alt.substring(3); // Remove "A) " do início
+                
+                div.innerHTML = `
+                    <div class="letter">${letter}</div>
+                    <span>${text}</span>
+                `;
+                
+                div.onclick = () => selectAnswer(letter);
+                alternativesDiv.appendChild(div);
+            });
+
+            // Reset do estado da pergunta
+            selectedAnswer = "";
+            bothPlayersTried = false;
+            document.getElementById('submitAnswer').style.display = 'none';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('nextButton').style.display = 'none';
+        }
+
+        function selectAnswer(answer) {
+            selectedAnswer = answer;
+            
+            // Remove seleção anterior
+            document.querySelectorAll('.alternative').forEach(alt => {
+                alt.classList.remove('selected');
+            });
+            
+            // Adiciona seleção atual
+            document.querySelectorAll('.alternative').forEach(alt => {
+                const letterElement = alt.querySelector('.letter');
+                if (letterElement && letterElement.textContent === answer) {
+                    alt.classList.add('selected');
+                }
+            });
+            
+            document.getElementById('submitAnswer').style.display = 'block';
+        }
+
+        function submitAnswer() {
+            const isCorrect = selectedAnswer === currentQuestion.correta;
+            const resultDiv = document.getElementById('result');
+            
+            if (isCorrect) {
+                // Jogador acertou
+                if (currentPlayer === 1) {
+                    player1Score++;
+                } else {
+                    player2Score++;
+                }
+                
+                resultDiv.className = 'result correct';
+                resultDiv.innerHTML = `🎉 ${currentPlayer === 1 ? player1Name : player2Name} acertou! 🎉`;
+                resultDiv.style.display = 'block';
+                
+                updateScoreboard();
+                document.getElementById('nextButton').style.display = 'block';
+                
+            } else {
+                // Jogador errou
+                if (!bothPlayersTried) {
+                    // Passa a vez para o outro jogador
+                    resultDiv.className = 'result incorrect';
+                    resultDiv.innerHTML = `❌ ${currentPlayer === 1 ? player1Name : player2Name} errou! Vez de ${currentPlayer === 1 ? player2Name : player1Name}`;
+                    resultDiv.style.display = 'block';
+                    
+                    currentPlayer = currentPlayer === 1 ? 2 : 1;
+                    bothPlayersTried = true;
+                    
+                    // Reset da seleção
+                    document.querySelectorAll('.alternative').forEach(alt => {
+                        alt.classList.remove('selected');
+                    });
+                    selectedAnswer = "";
+                    document.getElementById('submitAnswer').style.display = 'none';
+                    
+                    document.getElementById('roundIndicator').textContent = `RODADA ${currentRound}/5 - Vez de ${currentPlayer === 1 ? player1Name : player2Name}`;
+                    
+                    setTimeout(() => {
+                        resultDiv.style.display = 'none';
+                    }, 2000);
+                    
+                } else {
+                    // Ambos jogadores erraram
+                    resultDiv.className = 'result incorrect';
+                    resultDiv.innerHTML = `❌ Nenhum jogador acertou! A resposta correta era: ${currentQuestion.correta}`;
+                    resultDiv.style.display = 'block';
+                    
+                    document.getElementById('nextButton').style.display = 'block';
+                }
+            }
+            
+            document.getElementById('submitAnswer').style.display = 'none';
+        }
+
+        function nextQuestion() {
+            currentRound++;
+            // Alterna quem começa na próxima pergunta
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            loadQuestion();
+        }
+
+        function updateScoreboard() {
+            document.getElementById('scoreboard').textContent = `${player1Name}: ${player1Score} | ${player2Name}: ${player2Score}`;
+        }
+
+        function endGame() {
+            showScreen('final');
+            
+            document.getElementById('finalScore').textContent = `${player1Name}: ${player1Score} | ${player2Name}: ${player2Score}`;
+            
+            const winnerDiv = document.getElementById('winner');
+            const trophyDiv = document.getElementById('trophy');
+            
+            if (player1Score > player2Score) {
+                winnerDiv.innerHTML = `<h2>🏆 ${player1Name} é o vencedor! 🏆</h2>`;
+                trophyDiv.textContent = '🥇';
+            } else if (player2Score > player1Score) {
+                winnerDiv.innerHTML = `<h2>🏆 ${player2Name} é o vencedor! 🏆</h2>`;
+                trophyDiv.textContent = '🥇';
+            } else {
+                winnerDiv.innerHTML = '<h2>🤝 Empate! 🤝</h2>';
+                trophyDiv.textContent = '🤝';
+            }
+            
+            // Mostra popup de prêmios após 2 segundos
+            setTimeout(() => {
+                showPrizePopup();
+            }, 2500);
+        }
+
+        function resetGame() {
+            // Reset de todas as variáveis
+            gameMode = "";
+            totalRounds = 5;
+            player1Name = "";
+            player2Name = "";
+            currentPlayer = 1;
+            player1Score = 0;
+            player2Score = 0;
+            currentRound = 1;
+            selectedAnswer = "";
+            currentQuestion = {};
+            questionsUsed = [];
+            bothPlayersTried = false;
+            availableQuestions = [...questions];
+            
+            // Limpa os campos de input
+            document.getElementById('player1').value = '';
+            document.getElementById('player2').value = '';
+            
+            // Volta para a tela inicial
+            showScreen('intro');
+        }
+
+        function showModeSelection() {
+            showScreen('modeSelection');
+        }
+
+        function selectMode(mode) {
+            gameMode = mode;
+            totalRounds = mode === 'teams' ? 20 : 5;
+            
+            // Atualiza os labels baseado no modo
+            const label1 = document.querySelector('label[for="player1"]');
+            const label2 = document.querySelector('label[for="player2"]');
+            
+            if (mode === 'teams') {
+                label1.textContent = 'Nome da Equipe 1:';
+                label2.textContent = 'Nome da Equipe 2:';
+                document.getElementById('player1').placeholder = 'Digite o nome da equipe';
+                document.getElementById('player2').placeholder = 'Digite o nome da equipe';
+            } else {
+                label1.textContent = 'Nome do Jogador 1:';
+                label2.textContent = 'Nome do Jogador 2:';
+                document.getElementById('player1').placeholder = 'Digite o nickname';
+                document.getElementById('player2').placeholder = 'Digite o nickname';
+            }
+            
+            showScreen('playerSetup');
+        }
+
+        function showPrizePopup() {
+            document.getElementById('prizePopup').style.display = 'flex';
+        }
+
+        function revealPrize(prizeNumber) {
+            const prizes = ['🎉 Parabéns! Que pena, vocês ganharam só 2 balas cada😿!', '🏆 Vocês são incríveis! Que pena, vocês ganharam só 2 balas cada😿!', '⭐ Excelente trabalho! Que pena, vocês ganharam só 2 balas cada😿!'];
+            const randomPrize = prizes[Math.floor(Math.random() * prizes.length)];
+            document.getElementById('prizeResult').textContent = randomPrize;
+            document.getElementById('revealPopup').style.display = 'flex';
+        }
+
+        function closePrizePopup() {
+            document.getElementById('prizePopup').style.display = 'none';
+        }
+
+        function closeRevealPopup() {
+            document.getElementById('revealPopup').style.display = 'none';
+            closePrizePopup();
+        }
+    </script>
+</body>
+<!--E aqui acaba meu sofrimento-->
+</html>
